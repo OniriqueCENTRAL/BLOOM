@@ -1539,7 +1539,7 @@ private:
         auto& licence = bloomlic::License::get();
         if (licence.isTrial())
             return T("BLOOM est en essai gratuit : encore ") + juce::String(juce::jmax(1, licence.trialDaysLeft()))
-                 + T(" jour(s). Tout y est, mais un export reste remplac\xC3\xA9 par un bruit blanc tant que BLOOM n'est pas achet\xC3\xA9. "
+                 + T(licence.trialDaysLeft() > 1 ? " jours" : " jour") + T(". Tout y est, mais un export reste remplac\xC3\xA9 par un bruit blanc tant que BLOOM n'est pas achet\xC3\xA9. "
                      "Ach\xC3\xA8te-le depuis ONIRIQUE CENTRAL pour le garder.");
         return lic ? T("BLOOM est activ\xC3\xA9 sur cet ordinateur. Le mode d\xC3\xA9mo est termin\xC3\xA9 : Make your mix BLOOM.")
                    : T("Tu utilises BLOOM en mode d\xC3\xA9mo : un bruit blanc coupe l'\xC3\xA9""coute toutes les trente secondes et remplace tout export. "
