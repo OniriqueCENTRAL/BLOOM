@@ -2,14 +2,13 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
-#include "License/LicenseOverlay.h"
 
 class BloomArcsLayer; // les arcs (definis dans PluginEditor.cpp)
 class BloomScene;     // la scene 3D (BloomScene.cpp)
 class BloomSheet;     // la fiche explicative (definie dans PluginEditor.cpp)
 class BloomMenu;      // le menu a gemmes en haut a droite (PluginEditor.cpp)
 class BloomChain;     // la chaine argentee qui pend du cadre (PluginEditor.cpp)
-class BloomDemoTag;   // l'etiquette DEMO en haut a gauche (PluginEditor.cpp)
+class BloomDemoTag;   // l'etiquette de la licence en haut a gauche : DEMO, ESSAI ou ACTIVE (PluginEditor.cpp)
 
 // Tout le contenu du plugin (3D + interface). Il est pose dans la fenetre BLOOMAudioProcessorEditor ci-dessous.
 class BloomView : public juce::Component,
@@ -74,7 +73,7 @@ private:
     std::unique_ptr<BloomMenu> menu;
     std::unique_ptr<BloomChain> chain;
     std::unique_ptr<BloomDemoTag> demoTag;
-    std::unique_ptr<onirique::license::Overlay> licenseOverlay; // pastille et page de la licence commune
+    int lastLicenseState = -1;                   // pour suivre une activation faite pendant que la fenetre est ouverte
     std::unique_ptr<BloomScene> scene;            // doit etre detruite apres le contexte OpenGL ci-dessous
     juce::OpenGLContext glContext;
     juce::TextButton bypassButton{ "BYPASS" }, deltaButton{ "DELTA" }, povButton{ "FACONNER" };

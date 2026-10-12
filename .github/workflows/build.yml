@@ -102,6 +102,19 @@ jobs:
           path: dist/*
           if-no-files-found: error
 
+      # The interface as the plugin draws it without its 3D scene, not activated: on opening, and once its licence
+      # page has opened by itself. Kept with the logs, to be looked at without a DAW.
+      - name: Pictures of the interface (Windows)
+        if: matrix.name == 'Windows'
+        continue-on-error: true
+        shell: bash
+        run: |
+          cmake --build build --config Release --target bloom_snapshot --parallel > snapshot-build.log 2>&1
+          mkdir -p shots
+          build/Release/bloom_snapshot.exe shots/opening.png
+          build/Release/bloom_snapshot.exe shots/licence-page.png --ticks 220
+          build/Release/bloom_snapshot.exe --selftest 2>&1 | tee selftest.log
+
       # What happened, kept where it can be read without opening the run: the
       # errors, and the end of each log, on a branch that holds nothing else.
       - name: Leave the logs on a branch
@@ -109,8 +122,9 @@ jobs:
         shell: bash
         run: |
           mkdir logs
+          cp -r shots logs/ 2>/dev/null || true
           echo "${{ job.status }} - ${{ github.sha }} - $(date -u +%FT%TZ)" > logs/status.txt
-          for f in configure.log build.log test.log auval.log; do
+          for f in configure.log build.log test.log auval.log snapshot-build.log selftest.log; do
             [ -f "$f" ] || continue
             grep -n -E "error[: ]|Error:|FAIL|\*\* BUILD|AU VALIDATION|PASS" "$f" | head -200 > "logs/${f%.log}-errors.txt" || true
             tail -n 150 "$f" > "logs/${f%.log}-tail.txt"

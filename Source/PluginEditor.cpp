@@ -1334,7 +1334,7 @@ public:
             const bool lic = bloomlic::License::get().isLicensed();
             if (primaryRect.translated(content.getX(), content.getY()).contains(p)) { if (lic) closeSheet(); else activateNow(); return; }
             if (!lic && secondaryRect.translated(content.getX(), content.getY()).contains(p)) { closeSheet(); return; }
-            if (!lic && buyRect.contains(p)) { juce::URL(bloomlic::kBuyUrl).launchInDefaultBrowser(); return; }
+            if (!lic && buyRect.contains(p)) { recheckNow(); return; }
             if (!panel.contains(p)) closeSheet();
             return;
         }
@@ -1379,7 +1379,8 @@ private:
         if (!isShowing()) return;
         const double t = now();
         {
-            const bool want = page == 3 && !bloomlic::License::get().isLicensed() && (t - openT0) > 0.32;
+            const bool want = false; // plus de cle a saisir : BLOOM s'active depuis ONIRIQUE CENTRAL
+            juce::ignoreUnused(t);
             if (want != keyBox.isVisible())
             {
                 keyBox.setVisible(want);
@@ -1535,39 +1536,56 @@ private:
 
     static juce::String licText(bool lic)
     {
+        auto& licence = bloomlic::License::get();
+        if (licence.isTrial())
+            return T("BLOOM est en essai gratuit : encore ") + juce::String(juce::jmax(1, licence.trialDaysLeft()))
+                 + T(" jour(s). Tout y est, mais un export reste remplac\xC3\xA9 par un bruit blanc tant que BLOOM n'est pas achet\xC3\xA9. "
+                     "Ach\xC3\xA8te-le depuis ONIRIQUE CENTRAL pour le garder.");
         return lic ? T("BLOOM est activ\xC3\xA9 sur cet ordinateur. Le mode d\xC3\xA9mo est termin\xC3\xA9 : fais fleurir tes prods !")
-                   : T("Tu utilises BLOOM en mode d\xC3\xA9mo : le son se coupe 2 secondes toutes les 10 secondes. "
-                       "Colle ici la cl\xC3\xA9 de licence re\xC3\xA7ue par e-mail apr\xC3\xA8s ton achat pour d\xC3\xA9""bloquer BLOOM pour de bon.");
+                   : T("Tu utilises BLOOM en mode d\xC3\xA9mo : un bruit blanc coupe l'\xC3\xA9""coute toutes les trente secondes et remplace tout export. "
+                       "Ouvre ONIRIQUE CENTRAL, connecte-toi \xC3\xA0 ton compte, puis active BLOOM ou lance son essai gratuit de 7 jours : "
+                       "c'est pris en compte ici en quelques secondes.");
     }
 
-    static juce::String buyLabel() { return T("PAS ENCORE DE CL\xC3\x89 ?  ACHETER BLOOM"); }
+    static juce::String buyLabel() { return T("D\xC3\x89J\xC3\x80 ACTIV\xC3\x89 DANS CENTRAL ?  REV\xC3\x89RIFIER"); }
 
+    // le bouton principal de la page : ouvre ONIRIQUE CENTRAL, d'ou BLOOM s'active
     void activateNow()
     {
-        if (licBusy || bloomlic::License::get().isLicensed())
+        if (bloomlic::License::get().isLicensed())
             return;
-        licBusy = true;
+        bloomlic::License::get().openCentral();
+        licBusy = false;
         licMsgOk = true;
-        licMsg = T("Connexion \xC3\xA0 Gumroad\xE2\x80\xA6");
+        licMsg = T("ONIRIQUE CENTRAL s'ouvre : active BLOOM, puis reviens ici.");
         contentDirty[3] = true;
-        startTimerHz(60);
         repaint();
-
-        juce::Component::SafePointer<BloomSheet> self(this);
-        bloomlic::License::get().activate(keyBox.getText(), [self](bloomlic::Result r)
-        {
-            if (self == nullptr) return;
-            self->licBusy = false;
-            self->licMsgOk = r.ok;
-            self->licMsg = r.message;
-            if (r.ok)
-                self->keyBox.setVisible(false);
-            self->chromeDirty[3] = self->contentDirty[3] = true;
-            self->layout();
-            self->repaint();
-            if (self->onLicenseChanged) self->onLicenseChanged();
-        });
     }
+
+    // relit la licence tout de suite, sans attendre la prochaine verification
+    void recheckNow()
+    {
+        auto& licence = bloomlic::License::get();
+        licence.refresh();
+        licBusy = false;
+        licMsgOk = licence.isLicensed();
+        licMsg = licMsgOk ? T("BLOOM est activ\xC3\xA9 sur cet ordinateur.") : T("Pas encore de licence sur cet ordinateur.");
+        licenseChanged();
+        if (onLicenseChanged) onLicenseChanged();
+    }
+
+public:
+    // l'etat de la licence a change (depuis ONIRIQUE CENTRAL, pendant que la fenetre est ouverte)
+    void licenseChanged()
+    {
+        chromeDirty[3] = contentDirty[3] = true;
+        if (isVisible() && page == 3)
+        {
+            layout();
+            repaint();
+        }
+    }
+private:
 
     juce::String tabLabel(int i) const
     {
@@ -1769,7 +1787,7 @@ private:
         {
             const bool lic = bloomlic::License::get().isLicensed();
             const juce::Font pf = bloomfonts::pixelFont(8.97f * k, false, 1.2558f * k);
-            const juce::String label = lic ? T("LICENCE ACTIVE") : T("MODE D\xC3\x89MO");
+            const juce::String label = bloomlic::License::get().isTrial() ? T("ESSAI GRATUIT") : lic ? T("LICENCE ACTIVE") : T("MODE D\xC3\x89MO");
             const float w = juce::GlyphArrangement::getStringWidth(pf, label) + 40.0f * k;
             const juce::Rectangle<float> pill(panel.getCentreX() - w * 0.5f, tabsBox.getY() + 3.0f * k, w, 25.0f * k);
             const juce::Colour hi = lic ? juce::Colour(0xff8dffc8) : juce::Colour(0xffffd27a);
@@ -1985,7 +2003,7 @@ private:
         para(g, body, licLines, o.x, o.y, lh2, juce::Colour(0xffc9bfd6));
 
         // champ de la cle
-        text(g, bloomfonts::pixelFont(7.774f * k, false, 1.2f * k), lic ? T("TA CL\xC3\x89") : T("CL\xC3\x89 DE LICENCE"),
+        text(g, bloomfonts::pixelFont(7.774f * k, false, 1.2f * k), lic ? T("TON COMPTE") : T("ACTIVATION"),
              labelRect.translated(o.x, o.y), juce::Justification::left, juce::Colour(0xff857d90));
         const auto kr = keyRect.translated(o.x, o.y);
         g.setColour(juce::Colour(0xff07060b));
@@ -1995,8 +2013,8 @@ private:
         juce::ColourGradient inner(juce::Colour(0x66000000), 0.0f, kr.getY(), juce::Colour(0x00000000), 0.0f, kr.getY() + 8.0f * k, false);
         g.setGradientFill(inner);
         g.fillRect(kr.reduced(2.0f));
-        if (lic)
-            text(g, bloomfonts::bodyFont(14.0f * k), bloomlic::License::get().getMaskedKey(), kr, juce::Justification::horizontallyCentred, juce::Colour(0xffddd3e4));
+        text(g, bloomfonts::bodyFont(lic ? 14.0f * k : 12.0f * k), lic ? bloomlic::License::get().getMaskedKey() : T("Depuis l'application ONIRIQUE CENTRAL"),
+             kr, juce::Justification::horizontallyCentred, lic ? juce::Colour(0xffddd3e4) : juce::Colour(0xff857d90));
 
         // boutons
         auto button = [&](juce::Rectangle<float> r, const juce::String& label, bool primary, bool hov, bool disabled)
@@ -2026,7 +2044,7 @@ private:
             button(primaryRect, T("FERMER"), true, hoverBtn == 4, false);
         else
         {
-            button(primaryRect, licBusy ? T("V\xC3\x89RIFICATION\xE2\x80\xA6") : T("ACTIVER BLOOM"), true, hoverBtn == 4, licBusy);
+            button(primaryRect, licBusy ? T("V\xC3\x89RIFICATION\xE2\x80\xA6") : T("OUVRIR ONIRIQUE CENTRAL"), true, hoverBtn == 4, licBusy);
             button(secondaryRect, T("CONTINUER EN D\xC3\x89MO"), false, hoverBtn == 5, false);
         }
 
@@ -2924,7 +2942,7 @@ public:
     static constexpr int kWidth = 84, kHeight = 30;
     std::function<void()> onClick;
 
-    BloomDemoTag() { setMouseCursor(swordCursor(true)); setVisible(false); }
+    BloomDemoTag() { setMouseCursor(swordCursor(true)); setVisible(true); startTimerHz(20); }
     ~BloomDemoTag() override { stopTimer(); }
 
     void setTile(const juce::Image& t) { tile = t; repaint(); }
@@ -2932,13 +2950,11 @@ public:
     // affiche ou cache l'etiquette selon l'etat de la licence
     void refresh()
     {
-        const bool demo = !bloomlic::License::get().isLicensed();
-        if (demo != isVisible())
-            setVisible(demo);
-        if (demo && !isTimerRunning())
+        // en demo, en essai ou active : l'etiquette reste, et dit lequel
+        setVisible(true);
+        if (!isTimerRunning())
             startTimerHz(20);
-        else if (!demo)
-            stopTimer();
+        repaint();
     }
 
     void paint(juce::Graphics& g) override
@@ -2969,24 +2985,31 @@ public:
         const float t = (float) (juce::Time::getMillisecondCounterHiRes() * 0.001);
         const float v = 0.5f - 0.5f * std::cos(t * 2.4f);
         const float cx = 14.0f, cy = r.getCentreY();
-        softGlow(g, cx, cy, 9.0f + 2.0f * v, juce::Colour(0xffff8a3a).withAlpha(0.45f + 0.35f * v));
+        // ambre en demo et en essai, vert une fois BLOOM active
+        auto& licence = bloomlic::License::get();
+        const bool trial = licence.isTrial(), active = licence.isLicensed() && !trial;
+        const juce::Colour main = active ? juce::Colour(0xff5fe3a1) : juce::Colour(0xffffb347);
+        const juce::Colour bright = active ? juce::Colour(0xffe2fff0) : juce::Colour(0xfffff4dc);
+        softGlow(g, cx, cy, 9.0f + 2.0f * v, (active ? juce::Colour(0xff19b06c) : juce::Colour(0xffff8a3a)).withAlpha(0.45f + 0.35f * v));
         juce::Path d;
         const float h = 3.6f + 0.6f * v;
         d.addQuadrilateral(cx, cy - h, cx + h, cy, cx, cy + h, cx - h, cy);
-        g.setColour(juce::Colour(0xffffb347));
+        g.setColour(main);
         g.fillPath(d);
-        g.setColour(juce::Colour(0xfffff4dc));
+        g.setColour(bright);
         g.strokePath(d, juce::PathStrokeType(0.8f));
 
         const juce::Font f = bloomfonts::pixelFont(9.0f, true, 1.2f);
-        const juce::String label = juce::String::fromUTF8(hover ? "ACTIVER" : "D\xC3\x89MO");
+        const juce::String label = juce::String::fromUTF8(active ? (hover ? "LICENCE" : "ACTIV\xC3\x89")
+                                                               : trial ? (hover ? "LICENCE" : "ESSAI")
+                                                                       : (hover ? "ACTIVER" : "D\xC3\x89MO"));
         g.setFont(f);
         const float tx = 25.0f, tw = r.getWidth() - tx - 7.0f;
         const float w = juce::GlyphArrangement::getStringWidth(f, label);
         const float base = cy + (f.getAscent() - f.getDescent()) * 0.5f;
         g.setColour(juce::Colour(0xff07060b));
         g.drawSingleLineText(label, juce::roundToInt(tx + (tw - w) * 0.5f), juce::roundToInt(base + 1.0f));
-        g.setColour(hover ? juce::Colour(0xfffff4dc) : juce::Colour(0xffffb347));
+        g.setColour(hover ? bright : main);
         g.drawSingleLineText(label, juce::roundToInt(tx + (tw - w) * 0.5f), juce::roundToInt(base));
     }
 
@@ -3251,23 +3274,19 @@ BloomView::BloomView(BLOOMAudioProcessor& p)
     menu->setIconTile(tileCorner[0]);
     addAndMakeVisible(*chain);
 
-    // licence : etiquette DEMO (cachee si BLOOM est active) et page d'activation dans la fiche
+    // licence : l'etiquette en haut a gauche (demo, essai ou active) et la page de la licence dans la fiche
     demoTag = std::make_unique<BloomDemoTag>();
     demoTag->setTile(tileCorner[0]);
     demoTag->onClick = [this] { sheet->openLicense(); };
-    addChildComponent(*demoTag);
+    addAndMakeVisible(*demoTag);
     demoTag->refresh();
+    lastLicenseState = bloomlic::License::get().stateCode();
     sheet->onLicenseChanged = [this] { demoTag->refresh(); };
     // en mode demo, la page d'activation s'ouvre toute seule une fois par session de FL
     if (!bloomlic::License::get().isLicensed() && firstOpenThisSession())
         licenseNagPending = true;
     sheet->toFront(false);
     setMouseCursor(swordCursor(false));
-
-    // La licence commune passe au-dessus de tout : ajoutee en dernier. Elle est un enfant de cette vue, et non de la
-    // fenetre, parce que la 3D recouvre tout ce qui n'est pas dessine par elle.
-    licenseOverlay = std::make_unique<onirique::license::Overlay>("BLOOM", audioProcessor.license);
-    addAndMakeVisible(*licenseOverlay);
 
     bloomperf::mark("editeur : menu et chaine crees");
     setSize(600, 750); // format 4:5
@@ -3375,6 +3394,14 @@ void BloomView::timerCallback()
         }
     }
     BLOOM_PERF_SCOPE("editeur : minuterie");
+
+    // la licence s'active depuis ONIRIQUE CENTRAL, fenetre ouverte : l'etiquette et la page suivent
+    if (const int licenseState = bloomlic::License::get().stateCode(); licenseState != lastLicenseState)
+    {
+        lastLicenseState = licenseState;
+        demoTag->refresh();
+        sheet->licenseChanged();
+    }
 
     // page d'activation automatique (mode demo, une fois par session), quand la fenetre est bien affichee
     if (licenseNagPending && (isGlLive() || juce::Time::getMillisecondCounterHiRes() - createdAt > 4000.0)
@@ -3777,9 +3804,6 @@ void BloomView::resized()
     const int m = juce::roundToInt(juce::jlimit(14.0f, 24.0f, 0.03f * Wf)) + 10;
     menu->setBounds(W - BloomMenu::kWidth - m, m, BloomMenu::kWidth, BloomMenu::kHeight);
     demoTag->setBounds(m, m, BloomDemoTag::kWidth, BloomDemoTag::kHeight);
-    // la pastille de la licence, en bas au milieu, a l'interieur du cadre de pierre
-    if (licenseOverlay != nullptr)
-        licenseOverlay->fit(getLocalBounds(), 1.0f, juce::Rectangle<int>(0, 0, 224, 22).withCentre({ W / 2, getHeight() - 28 }));
     const float pivotY = (juce::jlimit(14.0f, 24.0f, 0.03f * Wf) + 10.0f) * 0.5f;
     const float chainLen = 0.155f * (float) getHeight() - pivotY;
     chain->setGeometry(0.21f * Wf, pivotY, chainLen, 0.0165f * Wf, juce::jlimit(10.0f, 15.0f, 0.018f * Wf));

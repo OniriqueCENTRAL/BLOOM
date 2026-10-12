@@ -2,21 +2,19 @@
 // ============================================================================
 //  BLOOM : licence
 //  La licence de BLOOM est celle d'ONIRIQUE CENTRAL, commune a tous les plugins
-//  (dossier License/ : activation depuis l'application, pastille et page
-//  d'activation dans le plugin, bruit blanc sans licence).
+//  (dossier License/) : elle s'active depuis l'application, et sans elle un
+//  bruit blanc coupe l'ecoute et remplace tout export.
 //
-//  BLOOM avait sa propre licence, avec sa page d'activation et son etiquette
-//  DEMO. Ce fichier garde ce que le reste du code en attend, et repond toujours
-//  « active » : la page et l'etiquette d'origine ne s'affichent plus, celles de
-//  la licence commune prennent leur place.
+//  BLOOM garde en revanche sa propre facon de la montrer : son etiquette en haut
+//  a gauche et sa page « licence » dans la fiche. Ce fichier leur donne l'etat de
+//  la licence commune, sous les noms que le reste du code utilisait deja.
 // ============================================================================
 #include <JuceHeader.h>
 #include <functional>
+#include "License/LicenseGuard.h"
 
 namespace bloomlic
 {
-    inline constexpr const char* kBuyUrl = "https://onirique.store/boutique";
-
     struct Result
     {
         bool ok = true;
@@ -26,15 +24,40 @@ namespace bloomlic
     class License
     {
     public:
+        // jamais detruit volontairement (pas d'objet JUCE "static" detruit au dechargement du plugin)
         static License& get()
         {
-            static License instance;
-            return instance;
+            static auto* instance = new License();
+            return *instance;
         }
 
-        void startup() {}
-        bool isLicensed() const { return true; }
-        juce::String getMaskedKey() const { return {}; }
-        void activate(const juce::String&, std::function<void(Result)> done) { if (done) done({}); }
+        void startup() { guard.refresh(); }
+
+        /** Relit le fichier de licence ecrit par ONIRIQUE CENTRAL. */
+        void refresh() { guard.refresh(); }
+
+        onirique::license::Status status() const { return guard.status(); }
+
+        /** Achete ou en essai : BLOOM n'est pas en mode demo. */
+        bool isLicensed() const { return status().state != onirique::license::State::unlicensed; }
+        bool isTrial() const { return status().state == onirique::license::State::trial; }
+        int trialDaysLeft() const { return status().daysLeft(); }
+
+        /** Change des que l'etat de la licence change (pour redessiner ce qui la montre). */
+        int stateCode() const
+        {
+            const auto s = status();
+            return (int) s.state * 1000 + s.daysLeft();
+        }
+
+        /** Le compte auquel la licence appartient. */
+        juce::String getMaskedKey() const { return status().email; }
+
+        /** Ouvre l'application ONIRIQUE CENTRAL, d'ou BLOOM s'active (ou la page pour l'installer). */
+        void openCentral() { onirique::license::core::openCentral(); }
+
+    private:
+        License() = default;
+        onirique::license::Guard guard { "bloom" };
     };
 }

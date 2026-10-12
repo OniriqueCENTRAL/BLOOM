@@ -1,7 +1,7 @@
 // Renders the editor to a PNG without a host and without its 3D scene (the interface as it is drawn while OpenGL
 // starts), and puts the plugin through what a host does to it.
 //
-//   bloom_snapshot out.png [--licence]      --licence leaves the licence page where it is
+//   bloom_snapshot out.png [--ticks n]      n timer ticks of 30 ms before the picture (30 by default)
 //   bloom_snapshot --selftest
 #include <JuceHeader.h>
 #include "../Source/PluginEditor.h"
@@ -16,7 +16,7 @@ constexpr int kBlock = 512;
 
 struct Director final : juce::Timer
 {
-    Director (juce::File destination, bool showLicence) : file (std::move (destination)), licence (showLicence)
+    Director (juce::File destination, int ticksToWait) : file (std::move (destination)), wait (ticksToWait)
     {
         processor.reset (createPluginFilter());
         processor->setPlayConfigDetails (2, 2, kSr, kBlock);
@@ -27,17 +27,10 @@ struct Director final : juce::Timer
 
     void timerCallback() override
     {
-        if (++ticks < 30)
+        if (++ticks < wait)
             return;
 
         stopTimer();
-
-        // The licence page covers a plugin that is not activated on this machine: closed, to see the interface.
-        if (! licence)
-            if (auto* view = editor->getChildComponent (0))
-                for (auto* child : view->getChildren())
-                    if (dynamic_cast<onirique::license::Overlay*> (child) != nullptr)
-                        child->setVisible (false);
 
         const auto image = editor->createComponentSnapshot (editor->getLocalBounds(), true, 1.0f);
         file.deleteFile();
@@ -51,8 +44,7 @@ struct Director final : juce::Timer
     juce::File file;
     std::unique_ptr<juce::AudioProcessor> processor;
     std::unique_ptr<juce::AudioProcessorEditor> editor;
-    int ticks = 0;
-    bool licence = false;
+    int ticks = 0, wait = 30;
 };
 
 /** Returns the number of things found wrong. */
@@ -125,11 +117,13 @@ int main (int argc, char** argv)
 
     if (args.isEmpty())
     {
-        std::printf ("usage: bloom_snapshot out.png [--licence]\n");
+        std::printf ("usage: bloom_snapshot out.png [--ticks n]\n");
         return 1;
     }
 
-    Director director (juce::File::getCurrentWorkingDirectory().getChildFile (args[0]), args.contains ("--licence"));
+    // --ticks 200 waits six seconds: long enough for the licence page to open by itself on a plugin that is not activated.
+    const auto at = args.indexOf ("--ticks");
+    Director director (juce::File::getCurrentWorkingDirectory().getChildFile (args[0]), at >= 0 && at + 1 < args.size() ? juce::jmax (1, args[at + 1].getIntValue()) : 30);
     juce::MessageManager::getInstance()->runDispatchLoop();
     return 0;
 }
