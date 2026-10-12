@@ -3264,6 +3264,11 @@ BloomView::BloomView(BLOOMAudioProcessor& p)
     sheet->toFront(false);
     setMouseCursor(swordCursor(false));
 
+    // La licence commune passe au-dessus de tout : ajoutee en dernier. Elle est un enfant de cette vue, et non de la
+    // fenetre, parce que la 3D recouvre tout ce qui n'est pas dessine par elle.
+    licenseOverlay = std::make_unique<onirique::license::Overlay>("BLOOM", audioProcessor.license);
+    addAndMakeVisible(*licenseOverlay);
+
     bloomperf::mark("editeur : menu et chaine crees");
     setSize(600, 750); // format 4:5
     bloomperf::mark("editeur : mise en page faite");
@@ -3762,6 +3767,9 @@ void BloomView::resized()
     const int m = juce::roundToInt(juce::jlimit(14.0f, 24.0f, 0.03f * Wf)) + 10;
     menu->setBounds(W - BloomMenu::kWidth - m, m, BloomMenu::kWidth, BloomMenu::kHeight);
     demoTag->setBounds(m, m, BloomDemoTag::kWidth, BloomDemoTag::kHeight);
+    // la pastille de la licence, en bas au milieu, a l'interieur du cadre de pierre
+    if (licenseOverlay != nullptr)
+        licenseOverlay->fit(getLocalBounds(), 1.0f, juce::Rectangle<int>(0, 0, 224, 22).withCentre({ W / 2, getHeight() - 28 }));
     const float pivotY = (juce::jlimit(14.0f, 24.0f, 0.03f * Wf) + 10.0f) * 0.5f;
     const float chainLen = 0.155f * (float) getHeight() - pivotY;
     chain->setGeometry(0.21f * Wf, pivotY, chainLen, 0.0165f * Wf, juce::jlimit(10.0f, 15.0f, 0.018f * Wf));

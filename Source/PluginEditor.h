@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include "License/LicenseOverlay.h"
 
 class BloomArcsLayer; // les arcs (definis dans PluginEditor.cpp)
 class BloomScene;     // la scene 3D (BloomScene.cpp)
@@ -73,6 +74,7 @@ private:
     std::unique_ptr<BloomMenu> menu;
     std::unique_ptr<BloomChain> chain;
     std::unique_ptr<BloomDemoTag> demoTag;
+    std::unique_ptr<onirique::license::Overlay> licenseOverlay; // pastille et page de la licence commune
     std::unique_ptr<BloomScene> scene;            // doit etre detruite apres le contexte OpenGL ci-dessous
     juce::OpenGLContext glContext;
     juce::TextButton bypassButton{ "BYPASS" }, deltaButton{ "DELTA" }, povButton{ "FACONNER" };

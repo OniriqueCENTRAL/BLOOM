@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "BloomLicense.h"
+#include "License/LicenseGuard.h"
 
 using BloomFilter = juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>,
     juce::dsp::IIR::Coefficients<float>>;
@@ -160,8 +161,10 @@ public:
     static constexpr double smoothingSeconds = 0.05;
     static constexpr int    subBlockSize = 32;
 
+    // Licence ONIRIQUE CENTRAL, commune a tous les plugins : sans elle, bruit blanc a l'export et par salves a l'ecoute.
+    onirique::license::Guard license { "bloom" };
+
 private:
-    bloomlic::DemoMute demoMute;   // mode demo tant que BLOOM n'est pas active
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
     void updateFilters(float weightAmount, float spaceAmount, float presenceAmount, float airAmount);
     void applyAirExciter(juce::AudioBuffer<float>& buffer, int start, int length, int numChannels, float airAmount);

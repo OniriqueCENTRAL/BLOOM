@@ -579,7 +579,7 @@ void BLOOMAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     outputGain.setRampDurationSeconds(smoothingSeconds);
     outputGain.reset();
 
-    demoMute.prepare(sampleRate);
+    license.refresh();   // les DAW repassent par ici juste avant un export
 }
 
 void BLOOMAudioProcessor::releaseResources() {}
@@ -727,8 +727,8 @@ void BLOOMAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
     // 12) LIMITEUR DE SECURITE
     applySafetyLimiter(buffer, numChannels);
 
-    // 13) MODE DEMO (sans licence) : le son se coupe 2 s toutes les 10 s
-    demoMute.process(buffer);
+    // 13) LICENCE : sans elle, le bloc est remplace par du bruit (a l'export, et par salves a l'ecoute)
+    license.process(buffer, getSampleRate(), isNonRealtime());
 }
 
 // ===== Le reste (infos pour FL Studio) =====
