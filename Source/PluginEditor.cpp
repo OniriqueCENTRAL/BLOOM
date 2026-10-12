@@ -3312,9 +3312,19 @@ bool BloomView::firstOpenThisSession()
     return true;
 }
 
+// L'outil d'apercu d'ONIRIQUE CENTRAL ouvre le plugin, tourne chaque reglage et photographie ce qui change. Un monde en
+// 3D qui bouge sans arret lui cache les reglages : pour lui, BLOOM garde l'interface dessinee sans OpenGL, celle qui
+// s'affiche d'habitude le temps que la 3D demarre.
+static bool bloomIsPreviewHost()
+{
+    static const bool preview = juce::File::getSpecialLocation(juce::File::hostApplicationPath)
+                                    .getFileNameWithoutExtension().containsIgnoreCase("probe");
+    return preview;
+}
+
 void BloomView::attachGl()
 {
-    if (glAttached)
+    if (glAttached || bloomIsPreviewHost())
         return;
     glAttached = true;
     glContext.attachTo(*this);
