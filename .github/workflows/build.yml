@@ -102,8 +102,8 @@ jobs:
           path: dist/*
           if-no-files-found: error
 
-      # The interface as the plugin draws it without its 3D scene, not activated: on opening, and once its licence
-      # page has opened by itself. Kept with the logs, to be looked at without a DAW.
+      # The interface as the plugin draws it without its 3D scene, in each state of the licence (demo, trial, bought),
+      # with and without its licence page. Kept with the logs, to be looked at without a DAW.
       - name: Pictures of the interface (Windows)
         if: matrix.name == 'Windows'
         continue-on-error: true
@@ -111,8 +111,10 @@ jobs:
         run: |
           cmake --build build --config Release --target bloom_snapshot --parallel > snapshot-build.log 2>&1
           mkdir -p shots
-          build/Release/bloom_snapshot.exe shots/opening.png
-          build/Release/bloom_snapshot.exe shots/licence-page.png --ticks 220
+          for STATE in demo trial active; do
+            build/Release/bloom_snapshot.exe shots/$STATE.png --state $STATE
+            build/Release/bloom_snapshot.exe shots/$STATE-page.png --state $STATE --page
+          done
           build/Release/bloom_snapshot.exe --selftest 2>&1 | tee selftest.log
 
       # What happened, kept where it can be read without opening the run: the

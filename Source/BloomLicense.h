@@ -36,7 +36,23 @@ namespace bloomlic
         /** Relit le fichier de licence ecrit par ONIRIQUE CENTRAL. */
         void refresh() { guard.refresh(); }
 
-        onirique::license::Status status() const { return guard.status(); }
+        onirique::license::Status status() const
+        {
+            if (pictured() != nullptr)
+                return *pictured();
+            return guard.status();
+        }
+
+        /** Pour l'outil qui photographie l'interface (tools/snapshot.cpp) : l'etat a montrer, a la place du vrai.
+            Ne change que ce que l'interface affiche : le son, lui, suit la licence du processeur, pas celle-ci. */
+        static void showInPictures(onirique::license::State state, const juce::String& email, int days)
+        {
+            auto* s = new onirique::license::Status();
+            s->state = state;
+            s->email = email;
+            s->expiresAt = days > 0 ? juce::Time::currentTimeMillis() + (juce::int64) days * 86400000 + 3600000 : 0;
+            pictured() = s;
+        }
 
         /** Achete ou en essai : BLOOM n'est pas en mode demo. */
         bool isLicensed() const { return status().state != onirique::license::State::unlicensed; }
@@ -57,6 +73,12 @@ namespace bloomlic
         void openCentral() { onirique::license::core::openCentral(); }
 
     private:
+        static onirique::license::Status*& pictured()
+        {
+            static onirique::license::Status* status = nullptr;
+            return status;
+        }
+
         License() = default;
         onirique::license::Guard guard { "bloom" };
     };

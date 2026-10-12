@@ -1,7 +1,10 @@
 // Renders the editor to a PNG without a host and without its 3D scene (the interface as it is drawn while OpenGL
 // starts), and puts the plugin through what a host does to it.
 //
-//   bloom_snapshot out.png [--ticks n]      n timer ticks of 30 ms before the picture (30 by default)
+//   bloom_snapshot out.png [--state demo|trial|active] [--page] [--ticks n]
+//       --state   what the interface shows of the licence (demo by default), whatever this machine has
+//       --page    with the licence page open, as a click on the tag in the top left corner opens it
+//       --ticks   timer ticks of 30 ms before the picture
 //   bloom_snapshot --selftest
 #include <JuceHeader.h>
 #include "../Source/PluginEditor.h"
@@ -16,7 +19,8 @@ constexpr int kBlock = 512;
 
 struct Director final : juce::Timer
 {
-    Director (juce::File destination, int ticksToWait) : file (std::move (destination)), wait (ticksToWait)
+    Director (juce::File destination, int ticksToWait, bool openLicencePage)
+        : file (std::move (destination)), wait (ticksToWait), page (openLicencePage)
     {
         processor.reset (createPluginFilter());
         processor->setPlayConfigDetails (2, 2, kSr, kBlock);
@@ -27,6 +31,17 @@ struct Director final : juce::Timer
 
     void timerCallback() override
     {
+        // A click on the tag in the top left corner, as the mouse would make it: it opens the licence page.
+        if (page && ticks == 8)
+            if (auto* view = editor->getChildComponent (0))
+                if (auto* tag = view->getComponentAt (juce::Point<int> (60, 44)))
+                {
+                    const auto at = tag->getLocalBounds().getCentre().toFloat();
+                    const auto now = juce::Time::getCurrentTime();
+                    tag->mouseDown (juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), at, juce::ModifierKeys::leftButtonModifier,
+                                                      0.0f, 0.0f, 0.0f, 0.0f, 0.0f, tag, tag, now, at, now, 1, false));
+                }
+
         if (++ticks < wait)
             return;
 
@@ -45,6 +60,7 @@ struct Director final : juce::Timer
     std::unique_ptr<juce::AudioProcessor> processor;
     std::unique_ptr<juce::AudioProcessorEditor> editor;
     int ticks = 0, wait = 30;
+    bool page = false;
 };
 
 /** Returns the number of things found wrong. */
@@ -117,13 +133,21 @@ int main (int argc, char** argv)
 
     if (args.isEmpty())
     {
-        std::printf ("usage: bloom_snapshot out.png [--ticks n]\n");
+        std::printf ("usage: bloom_snapshot out.png [--state demo|trial|active] [--page] [--ticks n]\n");
         return 1;
     }
 
-    // --ticks 200 waits six seconds: long enough for the licence page to open by itself on a plugin that is not activated.
+    // What the interface shows of the licence, whatever this machine has: demo, a trial with five days left, or bought.
+    using State = onirique::license::State;
+    const auto stateAt = args.indexOf ("--state");
+    const auto state = stateAt >= 0 && stateAt + 1 < args.size() ? args[stateAt + 1] : juce::String ("demo");
+    bloomlic::License::showInPictures (state == "active" ? State::licensed : state == "trial" ? State::trial : State::unlicensed,
+                                       state == "demo" ? juce::String() : juce::String ("prenom.nom-compose@exemple-de-domaine.com"), state == "trial" ? 5 : 0);
+
     const auto at = args.indexOf ("--ticks");
-    Director director (juce::File::getCurrentWorkingDirectory().getChildFile (args[0]), at >= 0 && at + 1 < args.size() ? juce::jmax (1, args[at + 1].getIntValue()) : 30);
+    const auto page = args.contains ("--page");
+    Director director (juce::File::getCurrentWorkingDirectory().getChildFile (args[0]),
+                       at >= 0 && at + 1 < args.size() ? juce::jmax (1, args[at + 1].getIntValue()) : (page ? 60 : 30), page);
     juce::MessageManager::getInstance()->runDispatchLoop();
     return 0;
 }

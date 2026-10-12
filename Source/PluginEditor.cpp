@@ -1432,7 +1432,7 @@ private:
         {
             const bool lic = bloomlic::License::get().isLicensed();
             const float lh2 = 16.5f * k;
-            licLines = wrap(body, licText(lic), cw);
+            licLines = wrap(licFont(k), licText(lic).toUpperCase(), cw);
             float y = (float) licLines.size() * lh2 + 14.0f * k;
             labelRect = { 0.0f, y, cw, 10.0f * k };
             y += 10.0f * k + 7.0f * k;
@@ -1541,11 +1541,14 @@ private:
             return T("BLOOM est en essai gratuit : encore ") + juce::String(juce::jmax(1, licence.trialDaysLeft()))
                  + T(" jour(s). Tout y est, mais un export reste remplac\xC3\xA9 par un bruit blanc tant que BLOOM n'est pas achet\xC3\xA9. "
                      "Ach\xC3\xA8te-le depuis ONIRIQUE CENTRAL pour le garder.");
-        return lic ? T("BLOOM est activ\xC3\xA9 sur cet ordinateur. Le mode d\xC3\xA9mo est termin\xC3\xA9 : fais fleurir tes prods !")
+        return lic ? T("BLOOM est activ\xC3\xA9 sur cet ordinateur. Le mode d\xC3\xA9mo est termin\xC3\xA9 : Make your mix BLOOM.")
                    : T("Tu utilises BLOOM en mode d\xC3\xA9mo : un bruit blanc coupe l'\xC3\xA9""coute toutes les trente secondes et remplace tout export. "
                        "Ouvre ONIRIQUE CENTRAL, connecte-toi \xC3\xA0 ton compte, puis active BLOOM ou lance son essai gratuit de 7 jours : "
                        "c'est pris en compte ici en quelques secondes.");
     }
+
+    // la police du texte de la page licence : celle du plugin, pas celle du systeme
+    static juce::Font licFont(float k) { return bloomfonts::pixelFont(8.2f * k, false, 1.0f * k); }
 
     static juce::String buyLabel() { return T("D\xC3\x89J\xC3\x80 ACTIV\xC3\x89 DANS CENTRAL ?  REV\xC3\x89RIFIER"); }
 
@@ -1615,9 +1618,19 @@ private:
     }
 
     // texte sur une ligne, centre verticalement dans sa boite (comme le CSS)
-    static void text(juce::Graphics& g, const juce::Font& f, const juce::String& s, juce::Rectangle<float> box,
+    static void text(juce::Graphics& g, const juce::Font& font, const juce::String& s, juce::Rectangle<float> box,
                      juce::Justification j, juce::Colour c)
     {
+        // Un texte ne sort jamais de sa case : trop large pour elle (un long e-mail, un libelle dans un petit bouton),
+        // il est resserre jusqu'a y tenir, avec une marge de chaque cote.
+        juce::Font f(font);
+        if (box.getWidth() > 24.0f)
+        {
+            const float room = box.getWidth() - 2.0f * juce::jmin(10.0f, box.getWidth() * 0.05f);
+            const float natural = juce::GlyphArrangement::getStringWidth(f, s);
+            if (natural > room)
+                f.setHorizontalScale(juce::jmax(0.5f, f.getHorizontalScale() * room / natural));
+        }
         g.setFont(f);
         g.setColour(c);
         const float w = juce::GlyphArrangement::getStringWidth(f, s);
@@ -1790,17 +1803,24 @@ private:
             const juce::String label = bloomlic::License::get().isTrial() ? T("ESSAI GRATUIT") : lic ? T("LICENCE ACTIVE") : T("MODE D\xC3\x89MO");
             const float w = juce::GlyphArrangement::getStringWidth(pf, label) + 40.0f * k;
             const juce::Rectangle<float> pill(panel.getCentreX() - w * 0.5f, tabsBox.getY() + 3.0f * k, w, 25.0f * k);
-            const juce::Colour hi = lic ? juce::Colour(0xff8dffc8) : juce::Colour(0xffffd27a);
-            const juce::Colour lo = lic ? juce::Colour(0xff19b06c) : juce::Colour(0xffffb347);
-            rectGlow(g, pill, 12.0f * k, (lic ? juce::Colour(0x6619b06c) : juce::Colour(0x66ff8a3a)));
-            juce::ColourGradient gr(hi, 0.0f, pill.getY(), lo, 0.0f, pill.getBottom(), false);
-            g.setGradientFill(gr);
-            g.fillRect(pill);
-            g.setColour(juce::Colour(0xff0b0910));
-            g.drawRect(pill.expanded(1.0f), 1.0f);
-            diamond(g, pill.getX() + 12.0f * k, pill.getCentreY(), 3.2f * k, juce::Colour(0xff1a120a));
-            diamond(g, pill.getRight() - 12.0f * k, pill.getCentreY(), 3.2f * k, juce::Colour(0xff1a120a));
-            text(g, pf, label, pill, juce::Justification::horizontallyCentred, juce::Colour(0xff1a120a));
+            const juce::Colour amber(0xffffb347), pale(0xfffff4dc);
+            rectGlow(g, pill, 12.0f * k, juce::Colour(lic ? 0x66ff8a3a : 0x33ff8a3a));
+            g.setColour(lic ? amber : juce::Colour(0xff6b5a3a));
+            g.fillPath(chamferPath(pill, 6.0f * k));
+            const auto in = pill.reduced(1.0f);
+            const auto inner = chamferPath(in, 5.0f * k);
+            g.setColour(juce::Colour(0xff17131d));
+            g.fillPath(inner);
+            g.saveState();
+            g.reduceClipRegion(inner);
+            juce::ColourGradient shade(juce::Colour(0x26ffffff), 0.0f, in.getY(), juce::Colour(0x8a000000), 0.0f, in.getBottom(), false);
+            shade.addColour(0.40, juce::Colour(0x00000000));
+            g.setGradientFill(shade);
+            g.fillRect(in);
+            g.restoreState();
+            diamond(g, pill.getX() + 12.0f * k, pill.getCentreY(), 3.2f * k, amber);
+            diamond(g, pill.getRight() - 12.0f * k, pill.getCentreY(), 3.2f * k, amber);
+            text(g, pf, label, pill, juce::Justification::horizontallyCentred, lic ? pale : amber);
             return;
         }
 
@@ -2000,7 +2020,17 @@ private:
         const auto o = content.getPosition();
         const juce::Font body = bloomfonts::bodyFont(11.063f * k);
         const float lh2 = 16.5f * k;
-        para(g, body, licLines, o.x, o.y, lh2, juce::Colour(0xffc9bfd6));
+        {
+            const juce::Font lf = licFont(k);
+            g.setFont(lf);
+            g.setColour(juce::Colour(0xffc9bfd6));
+            for (int i = 0; i < licLines.size(); ++i)
+            {
+                const float w = juce::GlyphArrangement::getStringWidth(lf, licLines[i]);
+                const float base = o.y + (float) i * lh2 + (lh2 - (lf.getAscent() + lf.getDescent())) * 0.5f + lf.getAscent();
+                g.drawSingleLineText(licLines[i], juce::roundToInt(o.x + (content.getWidth() - w) * 0.5f), juce::roundToInt(base));
+            }
+        }
 
         // champ de la cle
         text(g, bloomfonts::pixelFont(7.774f * k, false, 1.2f * k), lic ? T("TON COMPTE") : T("ACTIVATION"),
@@ -2008,7 +2038,7 @@ private:
         const auto kr = keyRect.translated(o.x, o.y);
         g.setColour(juce::Colour(0xff07060b));
         g.fillPath(chamferPath(kr, 5.0f * k));
-        g.setColour(lic ? juce::Colour(0xff19b06c) : juce::Colour(0xff6b5a3a));
+        g.setColour(lic ? juce::Colour(0xffffb347) : juce::Colour(0xff6b5a3a));
         g.strokePath(chamferPath(kr.reduced(0.5f), 5.0f * k), juce::PathStrokeType(1.0f));
         juce::ColourGradient inner(juce::Colour(0x66000000), 0.0f, kr.getY(), juce::Colour(0x00000000), 0.0f, kr.getY() + 8.0f * k, false);
         g.setGradientFill(inner);
@@ -2055,7 +2085,7 @@ private:
             const auto lines = wrap(body, licMsg, mr.getWidth());
             const float startY = mr.getY() + (mr.getHeight() - (float) juce::jmin(2, lines.size()) * lh2) * 0.5f;
             g.setFont(body);
-            g.setColour(licBusy ? juce::Colour(0xffb3a6c3) : (licMsgOk ? juce::Colour(0xff7fe0a0) : juce::Colour(0xffff7d97)));
+            g.setColour(licBusy ? juce::Colour(0xffb3a6c3) : (licMsgOk ? juce::Colour(0xffffd27a) : juce::Colour(0xffff7d97)));
             for (int i = 0; i < juce::jmin(2, lines.size()); ++i)
             {
                 const float w = juce::GlyphArrangement::getStringWidth(body, lines[i]);
@@ -2985,12 +3015,11 @@ public:
         const float t = (float) (juce::Time::getMillisecondCounterHiRes() * 0.001);
         const float v = 0.5f - 0.5f * std::cos(t * 2.4f);
         const float cx = 14.0f, cy = r.getCentreY();
-        // ambre en demo et en essai, vert une fois BLOOM active
+        // l'ambre du plugin dans tous les cas : c'est le mot qui dit l'etat
         auto& licence = bloomlic::License::get();
         const bool trial = licence.isTrial(), active = licence.isLicensed() && !trial;
-        const juce::Colour main = active ? juce::Colour(0xff5fe3a1) : juce::Colour(0xffffb347);
-        const juce::Colour bright = active ? juce::Colour(0xffe2fff0) : juce::Colour(0xfffff4dc);
-        softGlow(g, cx, cy, 9.0f + 2.0f * v, (active ? juce::Colour(0xff19b06c) : juce::Colour(0xffff8a3a)).withAlpha(0.45f + 0.35f * v));
+        const juce::Colour main(0xffffb347), bright(0xfffff4dc);
+        softGlow(g, cx, cy, 9.0f + 2.0f * v, juce::Colour(0xffff8a3a).withAlpha(0.45f + 0.35f * v));
         juce::Path d;
         const float h = 3.6f + 0.6f * v;
         d.addQuadrilateral(cx, cy - h, cx + h, cy, cx, cy + h, cx - h, cy);
@@ -2999,12 +3028,19 @@ public:
         g.setColour(bright);
         g.strokePath(d, juce::PathStrokeType(0.8f));
 
-        const juce::Font f = bloomfonts::pixelFont(9.0f, true, 1.2f);
         const juce::String label = juce::String::fromUTF8(active ? (hover ? "LICENCE" : "ACTIV\xC3\x89")
                                                                : trial ? (hover ? "LICENCE" : "ESSAI")
                                                                        : (hover ? "ACTIVER" : "D\xC3\x89MO"));
-        g.setFont(f);
         const float tx = 25.0f, tw = r.getWidth() - tx - 7.0f;
+        float size = 9.0f, spacing = 1.2f;
+        juce::Font f = bloomfonts::pixelFont(size, true, spacing);
+        while (juce::GlyphArrangement::getStringWidth(f, label) > tw && size > 6.5f)
+        {
+            size -= 0.5f;
+            spacing = juce::jmax(0.4f, spacing - 0.2f);
+            f = bloomfonts::pixelFont(size, true, spacing);
+        }
+        g.setFont(f);
         const float w = juce::GlyphArrangement::getStringWidth(f, label);
         const float base = cy + (f.getAscent() - f.getDescent()) * 0.5f;
         g.setColour(juce::Colour(0xff07060b));
