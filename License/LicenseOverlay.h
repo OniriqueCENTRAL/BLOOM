@@ -25,8 +25,16 @@ public:
     ~Overlay() override;
 
     /** Couvre toute l'interface. `scale` : le zoom de l'interface (1 = taille de base) ;
-        `pillArea` : l'emplacement de la pastille (248 x 26 conseillé), à la taille de base. */
-    void fit (juce::Rectangle<int> editorBounds, float scale, juce::Rectangle<int> pillArea);
+        `pillArea` : l'emplacement de la pastille, à la taille de base. La pastille prend la largeur de
+        son texte et se range dans cet emplacement selon `justification` (au centre par défaut) :
+        une place dans la barre du haut du plugin, à côté de ses autres boutons, la fait paraître
+        faite avec lui. */
+    void fit (juce::Rectangle<int> editorBounds, float scale, juce::Rectangle<int> pillArea,
+              juce::Justification justification = juce::Justification::centred);
+
+    /** La largeur que prend la pastille dans l'état présent, pour lui réserver sa place dans la barre du haut.
+        Quand l'état change (activation, fin d'essai), la pastille demande au plugin de ranger à nouveau son interface. */
+    int pillWidth() const;
 
     void paint (juce::Graphics&) override;
     void resized() override;
@@ -49,6 +57,7 @@ private:
     bool pageOpen = false;
     bool openedOnce = false;
     juce::Rectangle<int> pillBounds;
+    juce::Justification pillJustification { juce::Justification::centred };
 
     std::unique_ptr<Pill> pill;
     std::unique_ptr<Action> openCentral, recheck, dismiss;

@@ -1541,6 +1541,9 @@ private:
             return T("BLOOM est en essai gratuit : encore ") + juce::String(juce::jmax(1, licence.trialDaysLeft()))
                  + T(licence.trialDaysLeft() > 1 ? " jours" : " jour") + T(". Tout y est, mais un export reste remplac\xC3\xA9 par un bruit blanc tant que BLOOM n'est pas achet\xC3\xA9. "
                      "Ach\xC3\xA8te-le depuis ONIRIQUE CENTRAL pour le garder.");
+        if (! lic && licence.status().renewal)
+            return T("BLOOM est bien \xC3\xA0 toi, mais sa licence n'a pas \xC3\xA9t\xC3\xA9 renouvel\xC3\xA9""e depuis plus de 90 jours. "
+                     "Ouvre ONIRIQUE CENTRAL avec une connexion Internet : il la renouvelle en quelques secondes et BLOOM repart aussit\xC3\xB4t.");
         return lic ? T("BLOOM est activ\xC3\xA9 sur cet ordinateur. Le mode d\xC3\xA9mo est termin\xC3\xA9 : Make your mix BLOOM.")
                    : T("Tu utilises BLOOM en mode d\xC3\xA9mo : un bruit blanc coupe l'\xC3\xA9""coute toutes les trente secondes et remplace tout export. "
                        "Ouvre ONIRIQUE CENTRAL, connecte-toi \xC3\xA0 ton compte, puis active BLOOM ou lance son essai gratuit de 7 jours : "
@@ -1800,7 +1803,8 @@ private:
         {
             const bool lic = bloomlic::License::get().isLicensed();
             const juce::Font pf = bloomfonts::pixelFont(8.97f * k, false, 1.2558f * k);
-            const juce::String label = bloomlic::License::get().isTrial() ? T("ESSAI GRATUIT") : lic ? T("LICENCE ACTIVE") : T("MODE D\xC3\x89MO");
+            const juce::String label = bloomlic::License::get().isTrial() ? T("ESSAI GRATUIT") : lic ? T("LICENCE ACTIVE")
+                                     : bloomlic::License::get().status().renewal ? T("\xC3\x80 RENOUVELER") : T("MODE D\xC3\x89MO");
             const float w = juce::GlyphArrangement::getStringWidth(pf, label) + 40.0f * k;
             const juce::Rectangle<float> pill(panel.getCentreX() - w * 0.5f, tabsBox.getY() + 3.0f * k, w, 25.0f * k);
             const juce::Colour amber(0xffffb347), pale(0xfffff4dc);

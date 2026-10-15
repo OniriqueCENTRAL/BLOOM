@@ -16,10 +16,12 @@ struct Status
     State state = State::unlicensed;
     juce::String email;        // compte auquel la licence appartient
     juce::int64 expiresAt = 0; // millisecondes depuis 1970 ; 0 = sans limite
+    bool renewal = false;      // licence authentique dont le bail est passé : ouvrir ONIRIQUE CENTRAL, connecté
 
     Status() = default;
     Status (const core::Status& status)
-        : state (status.state), email (juce::String::fromUTF8 (status.email.c_str())), expiresAt ((juce::int64) status.expiresAt) {}
+        : state (status.state), email (juce::String::fromUTF8 (status.email.c_str())), expiresAt ((juce::int64) status.expiresAt),
+          renewal (status.renewal) {}
 
     /** Seul un plugin acheté exporte proprement : en essai ou en démo, l'export produit un bruit blanc. */
     bool exportsClean() const noexcept { return state == State::licensed; }
