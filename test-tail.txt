@@ -1,0 +1,2 @@
+Test project D:/a/BLOOM/BLOOM/build
+No tests were found!!!

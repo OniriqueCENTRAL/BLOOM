@@ -1,0 +1,7 @@
+  ok    44.1 kHz: a tone goes through, finite (peak 0.251, latency 72)
+  ok    the saved state is restored as it was
+  ok    48.0 kHz: a tone goes through, finite (peak 0.251, latency 78)
+  ok    the saved state is restored as it was
+  ok    96.0 kHz: a tone goes through, finite (peak 0.251, latency 150)
+  ok    the saved state is restored as it was
+all good
