@@ -1,0 +1,104 @@
+MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+
+  Checking File Globs
+  1>Checking Build System
+  Generating Bloom_artefacts/JuceLibraryCode/Bloom_resources.rc
+  Building Custom Rule D:/a/BLOOM/BLOOM/CMakeLists.txt
+  Building VST3 manifest helper for Bloom
+  Bloom_rc_lib.vcxproj -> D:\a\BLOOM\BLOOM\build\Bloom_rc_lib.dir\Release\Bloom_rc_lib.lib
+  -- The CXX compiler identification is MSVC 19.51.36260.0
+  -- Detecting CXX compiler ABI info
+  -- Detecting CXX compiler ABI info - done
+  -- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+  -- Detecting CXX compile features
+  -- Detecting CXX compile features - done
+  -- Configuring done (1.9s)
+  -- Generating done (0.0s)
+  -- Build files have been written to: D:/a/BLOOM/BLOOM/build/vst3_helpers/Bloom
+  MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+  
+    1>Checking Build System
+    Building Custom Rule D:/a/BLOOM/BLOOM/JUCE/extras/Build/CMake/juce_vst3_helper/CMakeLists.txt
+    juce_VST3ManifestHelper.cpp
+    vst3_helper.vcxproj -> D:\a\BLOOM\BLOOM\build\vst3_helpers\Bloom\vst3_helper.exe
+    Building Custom Rule D:/a/BLOOM/BLOOM/JUCE/extras/Build/CMake/juce_vst3_helper/CMakeLists.txt
+  Building Custom Rule D:/a/BLOOM/BLOOM/CMakeLists.txt
+  Generating juce_binarydata_BloomLicenseData/JuceLibraryCode/BinaryData1.cpp, juce_binarydata_BloomLicenseData/JuceLibraryCode/BinaryData2.cpp, juce_binarydata_BloomLicenseData/JuceLibraryCode/BinaryData3.cpp, juce_binarydata_BloomLicenseData/JuceLibraryCode/BinaryData4.cpp, juce_binarydata_BloomLicenseData/JuceLibraryCode/OniriqueLicenseData.h
+  Building Custom Rule D:/a/BLOOM/BLOOM/CMakeLists.txt
+  BinaryData1.cpp
+  BinaryData2.cpp
+  BinaryData3.cpp
+  BinaryData4.cpp
+  Generating Code...
+  BloomLicenseData.vcxproj -> D:\a\BLOOM\BLOOM\build\Release\BloomLicenseData.lib
+  Generating Bloom_artefacts/JuceLibraryCode/JuceHeader.h
+  Building Custom Rule D:/a/BLOOM/BLOOM/CMakeLists.txt
+  PluginProcessor.cpp
+  PluginEditor.cpp
+  BloomScene.cpp
+  juce_audio_processors.cpp
+  juce_gui_extra.cpp
+  juce_gui_basics.cpp
+  juce_gui_basics_2.cpp
+  juce_gui_basics_3.cpp
+D:\a\BLOOM\BLOOM\JUCE\modules\juce_gui_basics\juce_gui_basics.cpp(61): warning : This version of JUCE does not use the splash screen, the flag JUCE_DISPLAY_SPLASH_SCREEN is ignored [D:\a\BLOOM\BLOOM\build\Bloom.vcxproj]
+  juce_gui_basics_4.cpp
+  juce_gui_basics_5.cpp
+  juce_graphics.cpp
+  juce_graphics_Harfbuzz.cpp
+  juce_events.cpp
+  juce_core.cpp
+  juce_core_CompilationTime.cpp
+  juce_data_structures.cpp
+  juce_audio_processors_headless.cpp
+  juce_audio_processors_headless_ara.cpp
+  juce_audio_processors_headless_lv2_libs.cpp
+  juce_audio_basics.cpp
+  juce_audio_utils.cpp
+  juce_audio_formats.cpp
+  juce_audio_devices.cpp
+  juce_dsp.cpp
+  juce_opengl.cpp
+  License.cpp
+  LicenseCore.cpp
+  LicenseOverlay.cpp
+  tweetnacl.c
+  juce_graphics_Sheenbidi.c
+  juce_graphics_libjpg_1.c
+  juce_graphics_libjpg_2.c
+  juce_graphics_libjpg_3.c
+  juce_graphics_libpng.c
+  juce_graphics_libwebp_dec.c
+  juce_graphics_libwebp_dsp_dec.c
+  juce_graphics_libwebp_dsp_dec_avx2.c
+  juce_graphics_libwebp_dsp_dec_sse41.c
+  juce_graphics_libwebp_dsp_enc.c
+  juce_graphics_libwebp_dsp_enc_avx2.c
+  juce_graphics_libwebp_dsp_enc_sse41.c
+  juce_graphics_libwebp_enc.c
+  juce_graphics_libwebp_sharpyuv.c
+  juce_graphics_libwebp_utils.c
+  juce_graphics_lunasvg.c
+  juce_core_zlib.c
+  juce_audio_formats_flac_1.c
+  juce_audio_formats_flac_2.c
+  juce_audio_formats_ogg.c
+  juce_audio_formats_opus.c
+  juce_audio_formats_opusfile.c
+  Bloom.vcxproj -> D:\a\BLOOM\BLOOM\build\Bloom_artefacts\Release\BLOOM_SharedCode.lib
+  Building Custom Rule D:/a/BLOOM/BLOOM/CMakeLists.txt
+  juce_audio_plugin_client_AAX.cpp
+  juce_audio_plugin_client_AAX_utils.cpp
+  juce_audio_plugin_client_ARA.cpp
+  juce_audio_plugin_client_LV2.cpp
+  juce_audio_plugin_client_Standalone.cpp
+  juce_audio_plugin_client_Unity.cpp
+  juce_audio_plugin_client_VST2.cpp
+  juce_audio_plugin_client_VST3.cpp
+     Creating library D:/a/BLOOM/BLOOM/build/Bloom_artefacts/Release/VST3/BLOOM.lib and object D:/a/BLOOM/BLOOM/build/Bloom_artefacts/Release/VST3/BLOOM.exp
+  Generating code
+  Finished generating code
+  Bloom_VST3.vcxproj -> D:\a\BLOOM\BLOOM\build\Bloom_artefacts\Release\VST3\BLOOM.vst3\Contents\x86_64-win\BLOOM.vst3
+  removing moduleinfo.json
+  creating D:/a/BLOOM/BLOOM/build/Bloom_artefacts/Release/VST3/BLOOM.vst3/Contents/Resources/moduleinfo.json
+  Building Custom Rule D:/a/BLOOM/BLOOM/CMakeLists.txt

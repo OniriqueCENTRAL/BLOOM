@@ -1,0 +1,10 @@
+MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+
+  Checking File Globs
+  BloomLicenseData.vcxproj -> D:\a\BLOOM\BLOOM\build\Release\BloomLicenseData.lib
+  Bloom.vcxproj -> D:\a\BLOOM\BLOOM\build\Bloom_artefacts\Release\BLOOM_SharedCode.lib
+  Building Custom Rule D:/a/BLOOM/BLOOM/CMakeLists.txt
+  snapshot.cpp
+  Generating code
+  Finished generating code
+  bloom_snapshot.vcxproj -> D:\a\BLOOM\BLOOM\build\Release\bloom_snapshot.exe
