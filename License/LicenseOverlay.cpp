@@ -301,7 +301,7 @@ void Overlay::paint (juce::Graphics& g)
               + fr ("Ouvrez ONIRIQUE CENTRAL avec une connexion Internet : il renouvelle vos licences en quelques secondes, ")
               + fr ("et le plugin repart aussitôt. Hors ligne, une licence reste valable 90 jours après chaque renouvellement.")
         : product + fr (" n'est pas activé sur ce PC.\n\n")
-              + fr ("Sans licence, l'écoute est coupée par un bruit blanc toutes les trente secondes et tout export est remplacé par ce bruit.\n\n")
+              + fr ("Sans licence, le plugin fonctionne en temps réel dans le DAW, mais tout export est remplacé par un bruit blanc.\n\n")
               + fr ("Ouvrez ONIRIQUE CENTRAL, connectez-vous à votre compte, puis activez le plugin ou lancez son essai gratuit de 7 jours. ")
               + fr ("L'activation est prise en compte ici en quelques secondes.");
 

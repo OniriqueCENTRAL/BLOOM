@@ -8,7 +8,7 @@ namespace onirique::license
 
 enum class State
 {
-    unlicensed, // pas de licence valable sur cette machine : bruit blanc à l'export, et par salves à l'écoute
+    unlicensed, // pas de licence valable sur cette machine : écoute intacte, bruit blanc à l'export
     trial,      // essai gratuit en cours : écoute intacte, bruit blanc à l'export
     licensed    // plugin acheté ou abonnement actif
 };
@@ -17,10 +17,8 @@ enum class State
 /** Le bruit blanc du mode démo, à poser une fois le son du plugin calculé.
 
     - plugin acheté : rien ;
-    - essai gratuit : l'écoute en temps réel reste intacte, un export (rendu hors temps réel)
-      ne contient que du bruit ;
-    - pas de licence, ou essai terminé : l'export est du bruit, et l'écoute en temps réel
-      est coupée par deux secondes de bruit toutes les trente secondes. */
+    - essai gratuit, pas de licence ou essai terminé : l'écoute en temps réel dans le DAW reste
+      intacte, un export (rendu hors temps réel) ne contient que du bruit. */
 class DemoNoise
 {
 public:
@@ -29,22 +27,9 @@ public:
 
     /** Thread audio. Rend vrai quand le bloc a été remplacé par du bruit. */
     template <typename Sample>
-    bool process (Sample* const* channels, int numChannels, int numSamples, double sampleRate, bool offline) noexcept
+    bool process (Sample* const* channels, int numChannels, int numSamples, double /* sampleRate : plus utile, gardé pour les appels */, bool offline) noexcept
     {
-        const auto current = (State) state.load (std::memory_order_relaxed);
-        if (current == State::licensed)
-            return false;
-
-        bool noisy = offline;
-
-        if (! offline && current == State::unlicensed)
-        {
-            const auto period = (std::int64_t) (sampleRate * periodSeconds);
-            noisy = period > 0 && position % period >= period - (std::int64_t) (sampleRate * burstSeconds);
-            position += numSamples;
-        }
-
-        if (! noisy)
+        if (! offline || (State) state.load (std::memory_order_relaxed) == State::licensed)
             return false;
 
         for (int ch = 0; ch < numChannels; ++ch)
@@ -65,11 +50,8 @@ public:
         return true;
     }
 
-    static constexpr double periodSeconds = 30.0, burstSeconds = 2.0;
-
 private:
     std::atomic<int> state { (int) State::unlicensed };
-    std::int64_t position = 0;
     std::uint32_t seed = 0x9e3779b9u;
 };
 

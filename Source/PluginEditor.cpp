@@ -1545,7 +1545,7 @@ private:
             return T("BLOOM est bien \xC3\xA0 toi, mais sa licence n'a pas \xC3\xA9t\xC3\xA9 renouvel\xC3\xA9""e depuis plus de 90 jours. "
                      "Ouvre ONIRIQUE CENTRAL avec une connexion Internet : il la renouvelle en quelques secondes et BLOOM repart aussit\xC3\xB4t.");
         return lic ? T("BLOOM est activ\xC3\xA9 sur cet ordinateur. Le mode d\xC3\xA9mo est termin\xC3\xA9 : Make your mix BLOOM.")
-                   : T("Tu utilises BLOOM en mode d\xC3\xA9mo : un bruit blanc coupe l'\xC3\xA9""coute toutes les trente secondes et remplace tout export. "
+                   : T("Tu utilises BLOOM en mode d\xC3\xA9mo : l'\xC3\xA9""coute dans ton DAW est intacte, mais un bruit blanc remplace tout export. "
                        "Ouvre ONIRIQUE CENTRAL, connecte-toi \xC3\xA0 ton compte, puis active BLOOM ou lance son essai gratuit de 7 jours : "
                        "c'est pris en compte ici en quelques secondes.");
     }
