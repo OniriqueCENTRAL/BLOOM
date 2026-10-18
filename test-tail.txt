@@ -1,0 +1,2 @@
+Test project /Users/runner/work/BLOOM/BLOOM/build
+No tests were found!!!

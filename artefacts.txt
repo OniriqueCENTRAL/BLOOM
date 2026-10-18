@@ -1,0 +1,2 @@
+BLOOM-macOS-AU.zip
+BLOOM-macOS-VST3.zip
